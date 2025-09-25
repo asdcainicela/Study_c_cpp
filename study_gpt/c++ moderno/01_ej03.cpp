@@ -19,9 +19,19 @@ int main(){
         std::cout << n << ' ';
     }
     std::cout << '\n';
+    for (auto n : valores) {  //leer
+        std::cout << n << ' ';
+    }
+
+    std::cout << '\n';
 
     for (auto& n : valores) {
         n = 0;
+        std::cout << n << ' ';
+    }
+    
+    std::cout << '\n';
+    for (auto n : valores) {  //leer
         std::cout << n << ' ';
     }
 
