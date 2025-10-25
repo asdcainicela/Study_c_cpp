@@ -3,11 +3,11 @@
 
 int main(){
     cv::Mat vect;
-    cv::Mat img1 = imread("../data/home.jpg");
-    cv::Mat img2 = imread("../data/board.jpg");
-    cv::Mat img3 = imread("../data/left01.png");
-    cv::Mat img4 = imread("../data/starry_night.jpg");
-    
+    cv::Mat img1 = cv::imread("../data/home.jpg");
+    cv::Mat img2 = cv::imread("../data/board.jpg");
+    cv::Mat img3 = cv::imread("../data/left01.png");
+    cv::Mat img4 = cv::imread("../data/starry_night.jpg");
+
     if (img1.empty() || img2.empty() || img3.empty() || img4.empty()){
         std::cerr << "Error loading images p bro xd" << std::endl;
         return -1;
@@ -33,6 +33,6 @@ int main(){
     // Mostramos una sola ventana
     cv::imshow("Mosaico", canvas);
     cv::waitKey(0);
-    
+
     return 0;
 }
