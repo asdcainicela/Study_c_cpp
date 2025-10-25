@@ -10,6 +10,8 @@ int main(){
         std::cerr << "Error loading image p bro xd" << std::endl;
         return -1;
     }
+
+    cv::Mat img2, img3, img4, img5, img6;
     cv::blur(img1, img2,cv::Size(5,5)); //cv::blur(src, dst, cv::Size(5,5)); src -> img original, el otro salida
 
     /*
