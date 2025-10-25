@@ -26,8 +26,8 @@ int main() {
     cv::moveWindow("Imagen de fruitas clonada", 0, 450);
 
     cv::imshow("Imagen de fruitas clonada 2", img_fruits_clone2);
-    cv::moveWindow("Imagen de fruitas clonada 2", 650, 450);
+    cv::moveWindow("Imagen de fruitas clonada 2", 950, 450);
 
-    cv::waitKey(5000); //podemmos hacer cv::waitKey(0);
+    cv::waitKey(20000); //podemmos hacer cv::waitKey(0);
     return 0;
 }
