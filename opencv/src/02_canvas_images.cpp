@@ -13,7 +13,7 @@ int main(){
         return -1;
     }
      // Redimensionamos para que todas tengan el mismo tamaño
-    cv::Size tile_size(320, 240);
+    cv::Size tile_size(320*2, 240*2);
     cv::resize(img1, img1, tile_size);
     cv::resize(img2, img2, tile_size);
     cv::resize(img3, img3, tile_size);
@@ -22,6 +22,7 @@ int main(){
 
      // Creamos una imagen vacía para el mosaico (2x2)
     int rows = 2, cols = 2;
+    
     cv::Mat canvas(tile_size.height * rows, tile_size.width * cols, img1.type(), cv::Scalar(0,0,0));
 
     // Pegamos cada imagen en su posición
