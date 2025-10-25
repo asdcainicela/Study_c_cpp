@@ -14,43 +14,23 @@ int main(){
     cv::Mat img2, img3, img4, img5, img6;
     cv::blur(img1, img2,cv::Size(5,5)); //cv::blur(src, dst, cv::Size(5,5)); src -> img original, el otro salida
 
-    /*
-   
-GaussianBlur() → suaviza con un kernel gaussiano, más natural que blur().
+    cv::Canny(img1, img3, 50, 150); //cv::Canny(src, edges, 50, 150); edge es binaria salida y 50-150 thresholds min max
 
-cv::GaussianBlur(src, dst, cv::Size(5,5), 1.5);
+    cv::cvtColor(img1, img4, cv::COLOR_BGR2GRAY); //cv::cvtColor(src, gray, cv::COLOR_BGR2GRAY);
 
-b) Canny (detección de bordes)
+    cv::threshold(img4, img5, 128, 255, cv::THRESH_BINARY); //cv::threshold(gray, binary, 128, 255, cv::THRESH_BINARY);
 
-Detecta los bordes fuertes de una imagen.
+    cv::medianBlur(img1, img6, 5); //cv::medianBlur(src, dst, 5);
 
-cv::Canny(src, edges, 50, 150);
-
-
-50 y 150 → thresholds mínimo y máximo
-
-La salida edges es binaria, 0 (negro) = sin borde, 255 (blanco) = borde
-
-c) cvtColor (cambiar espacio de color)
-
-Convierte entre espacios de color, por ejemplo BGR → GRAY
-
-cv::cvtColor(src, gray, cv::COLOR_BGR2GRAY);
-
-d) Threshold / AdaptiveThreshold
-
-Convierte imágenes a blanco y negro según un valor umbral.
-
-cv::threshold(gray, binary, 128, 255, cv::THRESH_BINARY);
-
-
-128 → valor de umbral
-
-255 → valor que toman los píxeles mayores al umbral
-
-THRESH_BINARY → tipo de binarización*/
-    cv::imshow("Imagen Original", img1);
-    cv::imshow("Imagen Suavizada", img2);
-    cv::waitKey(0);
+    cv::Mat img_final(tile_size.height, tile_size.width*6, img1.type(), cv::Scalar(0,0,0));
+    img1.copyTo(img_final(cv::Rect(0, 0, tile_size.width, tile_size.height)));
+    img2.copyTo(img_final(cv::Rect(tile_size.width, 0, tile_size.width, tile_size.height)));
+    img3.copyTo(img_final(cv::Rect(tile_size.width*2, 0, tile_size.width, tile_size.height)));
+    img4.copyTo(img_final(cv::Rect(tile_size.width*3, 0, tile_size.width, tile_size.height)));
+    img5.copyTo(img_final(cv::Rect(tile_size.width*4, 0, tile_size.width, tile_size.height)));
+    img6.copyTo(img_final(cv::Rect(tile_size.width*5, 0, tile_size.width, tile_size.height)));
+    
+    cv::imshow("imagenes con filtros", img_final);
+    cv::waitKey(10000);
     return 0;
 }
