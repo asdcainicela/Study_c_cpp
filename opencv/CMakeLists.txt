@@ -13,3 +13,6 @@ target_link_libraries(canvas_image ${OpenCV_LIBS})
 
 add_executable(filtros_image src/03_filtros_images.cpp)
 target_link_libraries(filtros_image ${OpenCV_LIBS})
+
+add_executable(draw_text src/04_draw_text.cpp)
+target_link_libraries(draw_text ${OpenCV_LIBS})
