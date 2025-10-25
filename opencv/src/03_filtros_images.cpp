@@ -22,6 +22,12 @@ int main(){
 
     cv::medianBlur(img1, img6, 5); //cv::medianBlur(src, dst, 5);
 
+    // Convertir imágenes en escala de grises a BGR para que todas tengan 3 canales
+    cv::cvtColor(img3, img3, cv::COLOR_GRAY2BGR);
+    cv::cvtColor(img4, img4, cv::COLOR_GRAY2BGR);
+    cv::cvtColor(img5, img5, cv::COLOR_GRAY2BGR);
+
+
     int rows = 2, cols = 3;
     cv::Mat img_final(tile_size.height*rows, tile_size.width*cols, img1.type(), cv::Scalar(0,0,0));
     img1.copyTo(img_final(cv::Rect(0, 0, tile_size.width, tile_size.height))); // fila 0, col 0
