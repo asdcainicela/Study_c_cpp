@@ -22,14 +22,17 @@ int main(){
 
     cv::medianBlur(img1, img6, 5); //cv::medianBlur(src, dst, 5);
 
-    cv::Mat img_final(tile_size.height, tile_size.width*6, img1.type(), cv::Scalar(0,0,0));
-    img1.copyTo(img_final(cv::Rect(0, 0, tile_size.width, tile_size.height)));
-    img2.copyTo(img_final(cv::Rect(tile_size.width, 0, tile_size.width, tile_size.height)));
-    img3.copyTo(img_final(cv::Rect(tile_size.width*2, 0, tile_size.width, tile_size.height)));
-    img4.copyTo(img_final(cv::Rect(tile_size.width*3, 0, tile_size.width, tile_size.height)));
-    img5.copyTo(img_final(cv::Rect(tile_size.width*4, 0, tile_size.width, tile_size.height)));
-    img6.copyTo(img_final(cv::Rect(tile_size.width*5, 0, tile_size.width, tile_size.height)));
-    
+    int rows = 2, cols = 3;
+    cv::Mat img_final(tile_size.height*rows, tile_size.width*cols, img1.type(), cv::Scalar(0,0,0));
+    img1.copyTo(img_final(cv::Rect(0, 0, tile_size.width, tile_size.height))); // fila 0, col 0
+    img2.copyTo(img_final(cv::Rect(tile_size.width, 0, tile_size.width, tile_size.height))); // fila 0, col 1
+    img3.copyTo(img_final(cv::Rect(tile_size.width*2, 0, tile_size.width, tile_size.height))); // fila 0, col 2
+
+    img4.copyTo(img_final(cv::Rect(0, tile_size.height, tile_size.width, tile_size.height))); // fila 1, col 0
+    img5.copyTo(img_final(cv::Rect(tile_size.width, tile_size.height, tile_size.width, tile_size.height))); // fila 1, col 1
+    img6.copyTo(img_final(cv::Rect(tile_size.width*2, tile_size.height, tile_size.width, tile_size.height))); // fila 1, col 2
+
+        
     cv::imshow("imagenes con filtros", img_final);
     cv::waitKey(10000);
     return 0;
