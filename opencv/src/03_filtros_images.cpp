@@ -59,7 +59,7 @@ cv::threshold(gray, binary, 128, 255, cv::THRESH_BINARY);
 255 → valor que toman los píxeles mayores al umbral
 
 THRESH_BINARY → tipo de binarización*/
-    cv::imshow(img1);
+    cv::imshow("Imagen Original", img1);
     cv::waitKey(0);
     return 0;
 }
