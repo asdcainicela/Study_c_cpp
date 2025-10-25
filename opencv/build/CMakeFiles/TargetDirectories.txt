@@ -1,0 +1,3 @@
+/workspace/Study_c_cpp/opencv/build/CMakeFiles/rebuild_cache.dir
+/workspace/Study_c_cpp/opencv/build/CMakeFiles/edit_cache.dir
+/workspace/Study_c_cpp/opencv/build/CMakeFiles/load_image.dir
