@@ -25,10 +25,10 @@ int main(){
     cv::Mat canvas(tile_size.height * rows, tile_size.width * cols, img1.type(), cv::Scalar(0,0,0));
 
     // Pegamos cada imagen en su posición
-    img1.copyTo(canvas(Rect(0, 0, tile_size.width, tile_size.height)));
-    img2.copyTo(canvas(Rect(tile_size.width, 0, tile_size.width, tile_size.height)));
-    img3.copyTo(canvas(Rect(0, tile_size.height, tile_size.width, tile_size.height)));
-    img4.copyTo(canvas(Rect(tile_size.width, tile_size.height, tile_size.width, tile_size.height)));
+    img1.copyTo(canvas(cv::Rect(0, 0, tile_size.width, tile_size.height)));
+    img2.copyTo(canvas(cv::Rect(tile_size.width, 0, tile_size.width, tile_size.height)));
+    img3.copyTo(canvas(cv::Rect(0, tile_size.height, tile_size.width, tile_size.height)));
+    img4.copyTo(canvas(cv::Rect(tile_size.width, tile_size.height, tile_size.width, tile_size.height)));
 
     // Mostramos una sola ventana
     cv::imshow("Mosaico", canvas);
