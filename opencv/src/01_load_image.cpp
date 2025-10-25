@@ -5,12 +5,7 @@ int main() {
     cv::Mat img_lena = cv::imread("../data/lena.jpg");
     cv::Mat img_fruits = cv::imread("../data/fruits.jpg");
 
-    if (img_lena.empty()) {
-        std::cerr << "No se pudo cargar la imagen" << std::endl;
-        return -1;
-    }
-
-    if (img_fruits.empty()) {
+    if (img_lena.empty() || img_fruits.empty()) {
         std::cerr << "Fallo cargar p mano" << std::endl;
         return -1;
     }
@@ -19,7 +14,7 @@ int main() {
     cv::resize(img_fruits_clone, img_fruits_clone, cv::Size(640,400)); // redimensionamos la imagen clonada
 
     cv::Mat img_fruits_clone2 = img_fruits_clone.clone(); //clonamos otra vez
-    cv::resize(img_fruits_clone2, img_fruits_clone2, cv::Size(500,640)); // redimensionamos la imagen clonada 2
+    cv::resize(img_fruits_clone2, img_fruits_clone2, cv::Size(300,300)); // redimensionamos la imagen clonada 2
 
     cv::imshow("Imagen cargada", img_lena);
     cv::moveWindow("Imagen cargada", 0, 0);
