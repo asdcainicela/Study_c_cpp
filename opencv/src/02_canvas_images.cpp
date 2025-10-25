@@ -5,7 +5,7 @@ int main(){
     cv::Mat vect;
     cv::Mat img1 = cv::imread("../data/home.jpg");
     cv::Mat img2 = cv::imread("../data/board.jpg");
-    cv::Mat img3 = cv::imread("../data/left01.png");
+    cv::Mat img3 = cv::imread("../data/left01.jpg");
     cv::Mat img4 = cv::imread("../data/starry_night.jpg");
 
     if (img1.empty() || img2.empty() || img3.empty() || img4.empty()){
