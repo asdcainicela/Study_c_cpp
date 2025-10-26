@@ -29,6 +29,8 @@ int main(){
 
     cv::Mat img1 = cv::imread("../data/board.jpg");
 
+    cv::resize(img1,img1, cv::Size(300,200));
+
     img1.copyTo(img(cv::Rect(100,400, img1.cols, img1.rows))); // Pegamos la imagen en el canvas
 
     cv::imshow("Canvas", img);
