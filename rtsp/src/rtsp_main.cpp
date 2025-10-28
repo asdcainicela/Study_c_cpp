@@ -3,47 +3,58 @@
 #include <chrono>
 #include <thread>
 
-std::string camera_url(const std::string& user, const std::string& pass, const std::string& ip, int port) {
-    return "rtsp://" + user + ":" + pass + "@" + ip + ":" + std::to_string(port) + "/main";
+std::string gst_pipeline(const std::string& user, const std::string& pass, const std::string& ip, int port) {
+    return "rtspsrc location=rtsp://" + user + ":" + pass + "@" + ip + ":" + std::to_string(port) + "/main latency=100 ! "
+           "rtph264depay ! h264parse ! nvv4l2decoder ! "
+           "nvvidconv ! video/x-raw, format=BGRx ! videoconvert ! appsink";
 }
 
-cv::VideoCapture open_cap(const std::string& url, int retries=5) {
+cv::VideoCapture open_cap(const std::string& pipeline, int retries=5) {
     cv::VideoCapture cap;
     for (int i = 0; i < retries; ++i) {
-        cap.open(url, cv::CAP_FFMPEG);
+        cap.open(pipeline, cv::CAP_GSTREAMER);
         if (cap.isOpened()) return cap;
+        std::cerr << "Intento " << (i+1) << "/" << retries << " fallido. Reintentando en 2s...\n";
         std::this_thread::sleep_for(std::chrono::seconds(2));
     }
-    throw std::runtime_error("No se pudo conectar a: " + url);
+    throw std::runtime_error("No se pudo conectar a: " + pipeline);
 }
 
 int main() {
     auto start_main = std::chrono::steady_clock::now();
-    std::string url = camera_url("admin", "Panto2025", "192.168.0.101", 554);
-    
+
+    std::string user = "admin", pass = "Panto2025", ip = "192.168.0.101";
+    int port = 554;
+    std::string pipeline = gst_pipeline(user, pass, ip, port);
+
     cv::VideoCapture cap;
-    try { cap = open_cap(url); }
+    try { cap = open_cap(pipeline); }
     catch (const std::exception& e) { std::cerr << e.what() << "\n"; return -1; }
 
     cv::Mat frame, display;
     int frames = 0, lost = 0;
-    auto start = std::chrono::steady_clock::now();
+    auto start_fps = std::chrono::steady_clock::now();
 
     while (true) {
         if (!cap.read(frame)) {
             lost++;
             cap.release();
+            std::cerr << "Frame perdido. Reconectando...\n";
             std::this_thread::sleep_for(std::chrono::seconds(1));
-            cap = open_cap(url);
+            cap = open_cap(pipeline);
             continue;
         }
-        frames++;
 
+        frames++;
         cv::resize(frame, display, cv::Size(640, 360));
 
-        double fps = frames / std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
-        cv::putText(display, "Frames: " + std::to_string(frames) + " FPS: " + std::to_string(int(fps)) + " Lost: " + std::to_string(lost),
-                    {10,30}, cv::FONT_HERSHEY_SIMPLEX, 0.7, {0,255,0}, 2);
+        // Mostrar info cada 60 frames (~2s)
+        if (frames % 60 == 0) {
+            auto now = std::chrono::steady_clock::now();
+            double fps = 60.0 / std::chrono::duration<double>(now - start_fps).count();
+            start_fps = now;
+            std::cout << "Frames: " << frames << " | FPS actual: " << int(fps) << " | Perdidos: " << lost << "\n";
+        }
 
         cv::imshow("RTSP Stream", display);
         char c = (char)cv::waitKey(1);
@@ -54,8 +65,8 @@ int main() {
     cv::destroyAllWindows();
 
     auto end_main = std::chrono::steady_clock::now();
-    std::cout << "Duración total del main: "
-              << std::chrono::duration<double>(end_main - start_main).count() << " s\n";
+    std::cout << "\n=== Estadísticas finales ===\n";
+    std::cout << "Duración total: " << std::chrono::duration<double>(end_main - start_main).count() << " s\n";
     std::cout << "Frames totales: " << frames << " | Frames perdidos: " << lost << "\n";
 
     return 0;
