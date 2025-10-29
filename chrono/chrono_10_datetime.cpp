@@ -26,8 +26,8 @@ Operaciones con horas y minutos (+ hours(1)).
 */
 /*
 Timestamps en logs.
-
+Alguien leerá esto?
 Mostrar fecha/hora real de eventos.
-
+:c
 Cálculo de diferencias horarias o planificación.
 */
