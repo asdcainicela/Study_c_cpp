@@ -5,7 +5,7 @@ nvcc chrono_1_duration.cpp     -o chrono_1_duration
 nvcc chrono_2_timepoint.cpp    -o chrono_2_timepoint
 nvcc chrono_2_1_timepoint.cpp  -o chrono_2_1_timepoint
 nvcc chrono_3_system_clock.cpp -o chrono_3_system_clock
-nvcc chrono_4_steady_highres.cpp -o chrono_4_steady_highres
+nvcc -std=c++17 chrono_4_steady_highres.cpp -o chrono_4_steady_highres
 nvcc chrono_5_cast.cpp         -o chrono_5_cast
 nvcc chrono_6_literals.cpp     -o chrono_6_literals
 nvcc chrono_7_sleep.cpp        -o chrono_7_sleep
