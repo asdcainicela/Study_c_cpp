@@ -1,3 +1,9 @@
+/*
+08 — Stopwatch
+
+Cronómetro simple con high_resolution_clock para medir duración.
+ end - start → duración en ms o s
+*/
 #include <iostream>
 #include <chrono>
 #include <thread>
