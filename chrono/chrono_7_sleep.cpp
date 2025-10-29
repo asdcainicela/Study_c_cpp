@@ -1,9 +1,9 @@
 #include <iostream>
 #include <chrono>
-#include <thread>
+#include <thread> // para sleep functions
 
 int main() {
-    std::cout << "Esperando 1 segundo...\n";
+    std::cout << "Esperando 1 segundo...\n"; //log
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
     std::cout << "Esperando hasta 2 segundos después de inicio...\n";
