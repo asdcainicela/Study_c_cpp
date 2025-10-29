@@ -15,7 +15,7 @@ int main() {
 
     // Vemos cuanto tarda en contar hasta 1 billón
     int64_t num = 0;
-    while (num < 1'000'000'000'000) {
+    while (num < 1'000'000) {
         num++;
     }
 
