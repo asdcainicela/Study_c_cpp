@@ -1,11 +1,11 @@
 #include <iostream>
 #include <chrono>
-using namespace std::chrono_literals;
+using namespace std::chrono_literals; //usados mas para demos
 
 int main() {
-    auto t1 = 2s;
-    auto t2 = 1500ms;
-    auto t3 = 2500us;
+    auto t1 = 2s; // ayudan a no hacer std::chrono::seconds(2)
+    auto t2 = 1500ms; //std::chrono::milliseconds(1500)
+    auto t3 = 2500us; //std::chrono::microseconds(2500)
 
     auto total = t1 + t2 + std::chrono::duration_cast<std::chrono::seconds>(t3);
 
@@ -16,7 +16,7 @@ int main() {
 }
 
 /*
-Habilitas con: using namespace std::chrono_literals;
+Habilitas con: using namespace std::chrono_literals; 
 
 Literales disponibles:
 h (horas), min (minutos), s (segundos), ms (milisegundos), us (microsegundos), ns (nanosegundos)
