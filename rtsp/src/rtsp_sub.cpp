@@ -3,10 +3,10 @@
 #include <chrono>
 #include <thread>
 
-std::string gst_pipeline(const std::string& user, const std::string& pass, const std::string& ip, int port, const std::string& stream = "sub") {
-    // Usa stream secundario por defecto (más rápido)
+std::string gst_pipeline(const std::string& user, const std::string& pass, const std::string& ip, int port) {
+    // Pipeline EXACTAMENTE igual al que funcionaba, solo cambiamos latency
     return "rtspsrc location=rtsp://" + user + ":" + pass + "@" + ip + ":" + std::to_string(port) + 
-           "/" + stream + " latency=20 ! "
+           "/sub latency=20 ! "
            "rtph264depay ! h264parse ! nvv4l2decoder ! "
            "nvvidconv ! video/x-raw, format=BGRx ! videoconvert ! appsink";
 }
@@ -16,7 +16,6 @@ cv::VideoCapture open_cap(const std::string& pipeline, int retries=5) {
     for (int i = 0; i < retries; ++i) {
         cap.open(pipeline, cv::CAP_GSTREAMER);
         if (cap.isOpened()) {
-            cap.set(cv::CAP_PROP_BUFFERSIZE, 1);
             std::cout << "✓ Conectado exitosamente\n";
             return cap;
         }
@@ -31,11 +30,9 @@ int main() {
 
     std::string user = "admin", pass = "Panto2025", ip = "192.168.0.101";
     int port = 554;
+    std::string pipeline = gst_pipeline(user, pass, ip, port);
     
-    // Usa "sub" para stream secundario (21 FPS), o "main" para 4K (3 FPS)
-    std::string pipeline = gst_pipeline(user, pass, ip, port, "sub");
-    
-    std::cout << "Pipeline: " << pipeline << "\n\n";
+    std::cout << "Pipeline: " << pipeline << "\n\n";  // Ver el pipeline exacto
 
     cv::VideoCapture cap;
     try { 
@@ -46,7 +43,7 @@ int main() {
         return -1; 
     }
 
-    cv::Mat frame;
+    cv::Mat frame, display;
     int frames = 0, lost = 0;
     auto start_fps = std::chrono::steady_clock::now();
 
@@ -68,22 +65,20 @@ int main() {
         }
 
         frames++;
-        cv::imshow("RTSP Stream", frame);
+        cv::resize(frame, display, cv::Size(640, 360));
+        cv::imshow("RTSP Stream", display);
         
         char c = (char)cv::waitKey(1);
         if (c == 27 || c == 'q') break;
 
-        // Estadísticas cada 20 frames (~1 segundo a 20 FPS)
-        if (frames % 20 == 0) {
+        // Estadísticas cada 30 frames
+        if (frames % 30 == 0) {
             auto now = std::chrono::steady_clock::now();
-            double elapsed = std::chrono::duration<double>(now - start_fps).count();
-            double fps = 20.0 / elapsed;
-            
+            double fps = 30.0 / std::chrono::duration<double>(now - start_fps).count();
+            start_fps = now;
             std::cout << "Frames: " << frames 
                       << " | FPS: " << int(fps) 
                       << " | Perdidos: " << lost << "\n";
-            
-            start_fps = now;
         }
     }
 
