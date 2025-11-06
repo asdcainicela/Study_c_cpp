@@ -5,10 +5,10 @@
 
 std::string gst_pipeline(const std::string& user, const std::string& pass, const std::string& ip, int port) {
     return "rtspsrc location=rtsp://" + user + ":" + pass + "@" + ip + ":" + std::to_string(port) + 
-           "/main latency=0 ! "  // ← Cambiado de 100 a 0 (baja latencia)
+           "/main latency=50 ! "  // ← Latencia moderada (ni 0 ni 100)
            "rtph264depay ! h264parse ! nvv4l2decoder ! "
            "nvvidconv ! video/x-raw,format=BGRx ! videoconvert ! video/x-raw,format=BGR ! "
-           "appsink drop=true sync=false max-buffers=1";  // ← Optimizado: descarta frames viejos
+           "appsink drop=false sync=false max-buffers=3";  // ← Buffer pequeño pero no extremo
 }
 
 cv::VideoCapture open_cap(const std::string& pipeline, int retries=5) {
@@ -16,8 +16,7 @@ cv::VideoCapture open_cap(const std::string& pipeline, int retries=5) {
     for (int i = 0; i < retries; ++i) {
         cap.open(pipeline, cv::CAP_GSTREAMER);
         if (cap.isOpened()) {
-            // Reducir buffer interno de OpenCV
-            cap.set(cv::CAP_PROP_BUFFERSIZE, 1);
+            cap.set(cv::CAP_PROP_BUFFERSIZE, 2);  // Buffer mínimo pero funcional
             return cap;
         }
         std::cerr << "Intento " << (i+1) << "/" << retries << " fallido. Reintentando en 2s...\n";
@@ -46,19 +45,10 @@ int main() {
     cv::Mat frame, display;
     int frames = 0, lost = 0;
     auto start_fps = std::chrono::steady_clock::now();
-    auto last_display = std::chrono::steady_clock::now();
 
-    // Intentar crear ventana (si falla, seguirá sin GUI)
-    bool gui_available = true;
-    try {
-        cv::namedWindow("RTSP Stream", cv::WINDOW_NORMAL);
-    } catch (...) {
-        gui_available = false;
-        std::cout << "⚠ GUI no disponible, corriendo en modo headless\n";
-    }
+    cv::namedWindow("RTSP Stream", cv::WINDOW_NORMAL);
 
     while (true) {
-        // Capturar frame
         if (!cap.read(frame)) {
             lost++;
             std::cerr << "Frame perdido. Reconectando...\n";
@@ -74,40 +64,26 @@ int main() {
         }
 
         frames++;
+        cv::resize(frame, display, cv::Size(640, 360));
 
-        // Mostrar GUI solo si está disponible y no muy frecuente
-        auto now = std::chrono::steady_clock::now();
-        if (gui_available && std::chrono::duration<double>(now - last_display).count() > 0.033) {
-            // Limitar GUI a ~30 FPS máximo para no bloquear
-            cv::resize(frame, display, cv::Size(640, 360));
-            
-            try {
-                cv::imshow("RTSP Stream", display);
-                char c = (char)cv::waitKey(1);
-                if (c == 27 || c == 'q') break;
-            } catch (...) {
-                gui_available = false;
-                std::cout << "⚠ GUI falló, continuando sin visualización\n";
-            }
-            
-            last_display = now;
-        }
+        // Mostrar video en CADA frame (como el original)
+        cv::imshow("RTSP Stream", display);
+        char c = (char)cv::waitKey(1);
+        if (c == 27 || c == 'q') break;
 
         // Estadísticas cada 30 frames
         if (frames % 30 == 0) {
+            auto now = std::chrono::steady_clock::now();
             double fps = 30.0 / std::chrono::duration<double>(now - start_fps).count();
             start_fps = now;
             std::cout << "Frames: " << frames 
                       << " | FPS: " << int(fps) 
-                      << " | Perdidos: " << lost 
-                      << (gui_available ? " | GUI: ON" : " | GUI: OFF") << "\n";
+                      << " | Perdidos: " << lost << "\n";
         }
     }
 
     cap.release();
-    if (gui_available) {
-        cv::destroyAllWindows();
-    }
+    cv::destroyAllWindows();
 
     auto end_main = std::chrono::steady_clock::now();
     std::cout << "\n=== Estadísticas finales ===\n";
