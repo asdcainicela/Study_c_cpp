@@ -9,3 +9,6 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_executable(rtsp_main src/rtsp_main.cpp)
 target_link_libraries(rtsp_main ${OpenCV_LIBS} pthread)
+
+add_executable(rtsp_main src/rtsp_sub.cpp)
+target_link_libraries(rtsp_main ${OpenCV_LIBS} pthread)
