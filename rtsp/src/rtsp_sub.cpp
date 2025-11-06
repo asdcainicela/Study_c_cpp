@@ -6,7 +6,7 @@
 std::string gst_pipeline(const std::string& user, const std::string& pass, const std::string& ip, int port, const std::string& stream = "sub") {
     // Usa stream secundario por defecto (más rápido)
     return "rtspsrc location=rtsp://" + user + ":" + pass + "@" + ip + ":" + std::to_string(port) + 
-           "/" + stream + " protocols=tcp latency=20 ! "
+           "/" + stream + " latency=20 ! "
            "rtph264depay ! h264parse ! nvv4l2decoder ! "
            "nvvidconv ! video/x-raw, format=BGRx ! videoconvert ! appsink";
 }
