@@ -4,11 +4,11 @@
 #include <thread>
 
 std::string gst_pipeline(const std::string& user, const std::string& pass, const std::string& ip, int port) {
+    // Pipeline EXACTAMENTE igual al que funcionaba, solo cambiamos latency
     return "rtspsrc location=rtsp://" + user + ":" + pass + "@" + ip + ":" + std::to_string(port) + 
-           "/main latency=50 ! "  // ← Latencia moderada
+           "/main latency=50 ! "
            "rtph264depay ! h264parse ! nvv4l2decoder ! "
-           "nvvidconv ! video/x-raw, format=BGRx ! videoconvert ! "  // ← MISMO formato que funcionaba
-           "appsink drop=true sync=false max-buffers=2";  // ← Solo optimizamos el appsink
+           "nvvidconv ! video/x-raw, format=BGRx ! videoconvert ! appsink";
 }
 
 cv::VideoCapture open_cap(const std::string& pipeline, int retries=5) {
@@ -16,7 +16,6 @@ cv::VideoCapture open_cap(const std::string& pipeline, int retries=5) {
     for (int i = 0; i < retries; ++i) {
         cap.open(pipeline, cv::CAP_GSTREAMER);
         if (cap.isOpened()) {
-            cap.set(cv::CAP_PROP_BUFFERSIZE, 1);
             std::cout << "✓ Conectado exitosamente\n";
             return cap;
         }
@@ -32,6 +31,8 @@ int main() {
     std::string user = "admin", pass = "Panto2025", ip = "192.168.0.101";
     int port = 554;
     std::string pipeline = gst_pipeline(user, pass, ip, port);
+    
+    std::cout << "Pipeline: " << pipeline << "\n\n";  // Ver el pipeline exacto
 
     cv::VideoCapture cap;
     try { 
