@@ -5,10 +5,10 @@
 
 std::string gst_pipeline(const std::string& user, const std::string& pass, const std::string& ip, int port) {
     return "rtspsrc location=rtsp://" + user + ":" + pass + "@" + ip + ":" + std::to_string(port) + 
-           "/main latency=50 ! "  // ← Latencia moderada (ni 0 ni 100)
+           "/main latency=50 ! "  // ← Latencia moderada
            "rtph264depay ! h264parse ! nvv4l2decoder ! "
-           "nvvidconv ! video/x-raw,format=BGRx ! videoconvert ! video/x-raw,format=BGR ! "
-           "appsink drop=false sync=false max-buffers=3";  // ← Buffer pequeño pero no extremo
+           "nvvidconv ! video/x-raw, format=BGRx ! videoconvert ! "  // ← MISMO formato que funcionaba
+           "appsink drop=true sync=false max-buffers=2";  // ← Solo optimizamos el appsink
 }
 
 cv::VideoCapture open_cap(const std::string& pipeline, int retries=5) {
@@ -16,7 +16,8 @@ cv::VideoCapture open_cap(const std::string& pipeline, int retries=5) {
     for (int i = 0; i < retries; ++i) {
         cap.open(pipeline, cv::CAP_GSTREAMER);
         if (cap.isOpened()) {
-            cap.set(cv::CAP_PROP_BUFFERSIZE, 2);  // Buffer mínimo pero funcional
+            cap.set(cv::CAP_PROP_BUFFERSIZE, 1);
+            std::cout << "✓ Conectado exitosamente\n";
             return cap;
         }
         std::cerr << "Intento " << (i+1) << "/" << retries << " fallido. Reintentando en 2s...\n";
@@ -35,7 +36,6 @@ int main() {
     cv::VideoCapture cap;
     try { 
         cap = open_cap(pipeline); 
-        std::cout << "✓ Conectado a la cámara\n";
     }
     catch (const std::exception& e) { 
         std::cerr << "✗ Error: " << e.what() << "\n"; 
@@ -65,9 +65,8 @@ int main() {
 
         frames++;
         cv::resize(frame, display, cv::Size(640, 360));
-
-        // Mostrar video en CADA frame (como el original)
         cv::imshow("RTSP Stream", display);
+        
         char c = (char)cv::waitKey(1);
         if (c == 27 || c == 'q') break;
 
