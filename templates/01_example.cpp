@@ -20,12 +20,12 @@ Conceptos aplicados: templates genéricos, paso por valor, referencia y puntero,
 #include <iostream>
 
 template <typename T > 
-void print_cambio(T cambio){
+void print_cambio(T cambio,T cantidad_actual){
     if (cambio > 0){
-            std::cout<< "Despues de aumentar: "<< cambio<<std::endl;
+            std::cout<< "Despues de aumentar "<< cambio <<": "<< cantidad_actual <<std::endl;
         }
     else{
-            std::cout<< "Despues de disminuir: "<< cambio<<std::endl;
+            std::cout<< "Despues de disminuir  "<< cambio <<": "<< cantidad_actual <<std::endl;
         }
 }
 
@@ -33,7 +33,7 @@ template <typename T > //aunque aqui siempre es entero, template <int N>
 void actualizar_cantidad( T &_cantidad, T cambio ){ 
     if ((_cantidad + cambio >= 0) && (cambio != 0)) {
         _cantidad += cambio;
-        print_cambio(cambio);
+        print_cambio(cambio, _cantidad);
     }
     else{
         std::cout<< "No hay muchos productos o variacion";
@@ -45,10 +45,10 @@ void actualizar_cantidad(T* _cantidad, T cambio){
 
     if ((*_cantidad + cambio >=0)  && (cambio != 0)) {
         *_cantidad += cambio;
-        print_cambio(cambio);
+        print_cambio(cambio, *_cantidad);
     }
     else{
-        std::cout<< "No hay muchos productos o variacion";
+        std::cout<< "No hay stock" << std::endl;
    }
 }
 
@@ -65,9 +65,9 @@ int main() {
     auto precio{2.5};
     int * ptr_cantidad = &cantidad; 
 
-    actualizar_cantidad(ptr_cantidad, 5);   // Funciona
-    actualizar_cantidad(cantidad, -3);      // Funciona
-    actualizar_cantidad(cantidad, -20);     // Error: no hay suficiente stock
+    actualizar_cantidad(ptr_cantidad, 5);
+    actualizar_cantidad(cantidad, -3);
+    //actualizar_cantidad(cantidad, -20);     // no hay suficiente stock
 
     std::cout << "Cantidad final: " << cantidad << std::endl;
 
