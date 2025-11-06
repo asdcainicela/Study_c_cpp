@@ -6,7 +6,7 @@
 std::string gst_pipeline(const std::string& user, const std::string& pass, const std::string& ip, int port) {
     // Pipeline EXACTAMENTE igual al que funcionaba, solo cambiamos latency
     return "rtspsrc location=rtsp://" + user + ":" + pass + "@" + ip + ":" + std::to_string(port) + 
-           "/sub latency=50 ! "
+           "/main latency=50 ! "
            "rtph264depay ! h264parse ! nvv4l2decoder ! "
            "nvvidconv ! video/x-raw, format=BGRx ! videoconvert ! appsink";
 }
