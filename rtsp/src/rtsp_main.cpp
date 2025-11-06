@@ -29,9 +29,6 @@ cv::VideoCapture open_cap(const std::string& pipeline, int retries=5) {
 int main() {
     auto start_main = std::chrono::steady_clock::now();
 
-    // Suprimir warnings de OpenCV
-    cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_ERROR);
-
     std::string user = "admin", pass = "Panto2025", ip = "192.168.0.101";
     int port = 554;
     std::string pipeline = gst_pipeline(user, pass, ip, port);
