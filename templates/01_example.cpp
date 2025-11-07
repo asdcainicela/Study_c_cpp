@@ -12,7 +12,7 @@ Crea un inventario con productos que tengan cantidad y precio. Implementa funcio
    - Otra por referencia (modifica precio original).
 
 3. Mostrar información del producto:
-   - Sobrecarga de imprimir para valores y punteros.
+   - Sobrecarga de imprimir por punteros.
 
 Conceptos aplicados: templates genéricos, paso por valor, referencia y puntero, sobrecarga de funciones, uso con múltiples tipos (int, double, std::string).
 */
@@ -56,7 +56,8 @@ template <typename U>
 U descuento_aumento( U precio, U porcentaje){
 
     if (porcentaje >= 0 ){
-        std::cout << "Aplicando aumento" << std::endl;
+        std::cout << "Aplicando aumento ... puede ser " <<  std::endl;
+
     }
     else if (porcentaje > -100.0){
         std::cout<< "Aplicando descuento ..." << std::endl;   
@@ -65,7 +66,10 @@ U descuento_aumento( U precio, U porcentaje){
         std::cerr<< "No valido" << std::endl;
         return precio;
     }
+    
     U precio_variado =  precio * (1 + 1.0*porcentaje/100);
+    std::cout<<"el valor puede ser... " << precio_variado <<std::endl;
+
     return precio_variado;
 }
 
@@ -84,11 +88,13 @@ void descuento_aumento( U* precio, U porcentaje){
     *precio *= 1 + porcentaje * 1.0 / 100;
 }
 
-template <typename T>
-void imprimir(){}
+template <typename S, typename T, typename R>
+void imprimir(S producto, T* precio, R* cantidad){
+    std::cout<< "tenemos " << *cantidad << " " << producto << " a " << *precio << "soles"<< std::endl;
+}
 
 int main() {
-    auto producto{"Manzana"};
+    std::string producto{"Manzana"};
     int cantidad{10};
     float precio{2.5};
     int* ptr_cantidad = &cantidad; 
@@ -99,9 +105,10 @@ int main() {
     //actualizar_cantidad(cantidad, -20);     // no hay suficiente stock
     
     float posible_valor;
-    posible_valor =  descuento_aumento<float>(precio, 20.0);
+    posible_valor =  descuento_aumento<float>(precio, -20.0);
     descuento_aumento<float>(prt_precio, 25.0);
 
+    imprimir<std::string, int, float>(producto, ptr_cantidad, prt_precio);
 
     return 0;
 }
