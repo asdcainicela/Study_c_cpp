@@ -25,7 +25,7 @@ void print_cambio(T cambio,T cantidad_actual){
             std::cout<< "Despues de aumentar "<< cambio <<": "<< cantidad_actual <<std::endl;
         }
     else{
-            std::cout<< "Despues de disminuir  "<< cambio <<": "<< cantidad_actual <<std::endl;
+            std::cout<< "Despues de disminuir "<< cambio <<": "<< cantidad_actual <<std::endl;
         }
 }
 
@@ -52,9 +52,37 @@ void actualizar_cantidad(T* _cantidad, T cambio){
    }
 }
 
+template <typename U>
+U descuento_aumento( U precio, U porcentaje){
+
+    if (porcentaje >= 0 ){
+        std::cout << "Aplicando aumento" << std::endl;
+    }
+    else if (porcentaje > -100.0){
+        std::cout<< "Aplicando descuento ..." << std::endl;   
+    }
+    else{
+        std::cerr<< "No valido" << std::endl;
+        return precio;
+    }
+    U precio_variado =  precio * (1 + 1.0*porcentaje/100);
+    return precio_variado;
+}
 
 template <typename U>
-U descuento_aumento(){}
+void descuento_aumento( U* precio, U porcentaje){
+     if (porcentaje >= 0 ){
+        std::cout << "Aplicando aumento" << std::endl;
+    }
+    else if (porcentaje > -100.0){
+        std::cout<< "Aplicando descuento ..." << std::endl;   
+    }
+    else{
+        std::cerr<< "No valido" << std::endl;
+        return;
+    }
+    *precio *= 1 + porcentaje * 1.0 / 100;
+}
 
 template <typename T>
 void imprimir(){}
@@ -62,15 +90,17 @@ void imprimir(){}
 int main() {
     auto producto{"Manzana"};
     int cantidad{10};
-    auto precio{2.5};
-    int * ptr_cantidad = &cantidad; 
+    float precio{2.5};
+    int* ptr_cantidad = &cantidad; 
+    float* prt_precio = &precio;
 
     actualizar_cantidad(ptr_cantidad, 5);
     actualizar_cantidad(cantidad, -3);
     //actualizar_cantidad(cantidad, -20);     // no hay suficiente stock
-
-    std::cout << "Cantidad final: " << cantidad << std::endl;
-
+    
+    float posible_valor;
+    posible_valor =  descuento_aumento(precio, 20);
+    descuento_aumento(prt_precio, 25);
 
 
     return 0;
