@@ -90,7 +90,7 @@ void descuento_aumento( U* precio, U porcentaje){
 
 template <typename S, typename T, typename R>
 void imprimir(S producto, T* cantidad, R* precio ){
-    std::cout<< "tenemos " << *cantidad << " " << producto << " a " << *precio << "soles"<< std::endl;
+    std::cout<< "tenemos " << *cantidad << " " << producto << " a " << *precio << " soles"<< std::endl;
 }
 
 int main() {
