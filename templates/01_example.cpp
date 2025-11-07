@@ -105,7 +105,7 @@ int main() {
     int cantidad{10};
     float precio{2.5};
     int* ptr_cantidad = &cantidad; 
-    float* prt_precio = &precio;
+    float* ptr_precio = &precio;
 
     actualizar_cantidad(ptr_cantidad, 5);
     actualizar_cantidad(cantidad, -3);
@@ -113,9 +113,9 @@ int main() {
     
     float posible_valor;
     posible_valor =  descuento_aumento<float>(precio, -20.0);
-    descuento_aumento<float>(prt_precio, 25.0); 
+    descuento_aumento<float>(ptr_precio, 25.0); 
 
-    imprimir<std::string, int, float>(producto, ptr_cantidad, prt_precio);
+    imprimir<std::string, int, float>(producto, ptr_cantidad, ptr_precio);
     imprimir(producto, cantidad, precio);
     return 0;
 }
