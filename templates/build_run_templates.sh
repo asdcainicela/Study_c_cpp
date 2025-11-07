@@ -11,6 +11,7 @@ nvcc -std=c++17 06_tipo_valor.cpp        -o 06_tipo_valor
 
 
 nvcc -std=c++17 01_example.cpp        -o 01_example
+nvcc -std=c++17 02_example.cpp        -o 02_example
 
 # Archivos futuros 07–10 (por agregar)
 # nvcc -std=c++17 07_ejemplo.cpp         -o 07_ejemplo
