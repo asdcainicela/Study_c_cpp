@@ -99,8 +99,8 @@ int main() {
     //actualizar_cantidad(cantidad, -20);     // no hay suficiente stock
     
     float posible_valor;
-    posible_valor =  descuento_aumento(precio, 20);
-    descuento_aumento(prt_precio, 25);
+    posible_valor =  descuento_aumento<float>(precio, 20.0);
+    descuento_aumento<float>(prt_precio, 25.0);
 
 
     return 0;
