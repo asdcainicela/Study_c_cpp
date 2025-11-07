@@ -66,7 +66,7 @@ U descuento_aumento( U precio, U porcentaje){
         std::cerr<< "No valido" << std::endl;
         return precio;
     }
-    
+
     U precio_variado =  precio * (1 + 1.0*porcentaje/100);
     std::cout<<"el valor puede ser... " << precio_variado <<std::endl;
 
@@ -89,7 +89,7 @@ void descuento_aumento( U* precio, U porcentaje){
 }
 
 template <typename S, typename T, typename R>
-void imprimir(S producto, T* precio, R* cantidad){
+void imprimir(S producto, T* cantidad, R* precio ){
     std::cout<< "tenemos " << *cantidad << " " << producto << " a " << *precio << "soles"<< std::endl;
 }
 
