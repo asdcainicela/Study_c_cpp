@@ -26,7 +26,7 @@ cv::VideoCapture open_cap(const std::string& pipeline, int retries=5) {
 
 int main() {
     auto start_main = std::chrono::steady_clock::now();
-    std::string user = "admin", pass = "Panto2025", ip = "192.168.0.101";
+    std::string user = "admin", pass = "pass", ip = "192.168.0.101";
     int port = 554;
     std::string pipeline = gst_pipeline(user, pass, ip, port);
 
