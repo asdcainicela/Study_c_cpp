@@ -36,7 +36,7 @@ void actualizar_cantidad( T &_cantidad, T cambio ){
         print_cambio(cambio, _cantidad);
     }
     else{
-        std::cout<< "No hay muchos productos o variacion";
+        std::cout<< "No hay muchos productos o variacion" <<std::endl;
    }
 }
 
@@ -56,7 +56,7 @@ template <typename U>
 U descuento_aumento( U precio, U porcentaje){
 
     if (porcentaje >= 0 ){
-        std::cout << "Aplicando aumento ... puede ser " <<  std::endl;
+        std::cout << "Aplicando aumento ..." <<  std::endl;
 
     }
     else if (porcentaje > -100.0){
@@ -90,7 +90,14 @@ void descuento_aumento( U* precio, U porcentaje){
 
 template <typename S, typename T, typename R>
 void imprimir(S producto, T* cantidad, R* precio ){
-    std::cout<< "tenemos " << *cantidad << " " << producto << " a " << *precio << " soles"<< std::endl;
+    std::cout<< "tenemos " << *cantidad << " " << producto
+             << " a " << *precio << " soles"<< std::endl;
+}
+
+template <typename S, typename T, typename R>
+void imprimir(S producto, T cantidad, R precio) {
+    std::cout << "tenemos " << cantidad << " " << producto 
+              << " a " << precio << " soles" << std::endl;
 }
 
 int main() {
@@ -106,9 +113,9 @@ int main() {
     
     float posible_valor;
     posible_valor =  descuento_aumento<float>(precio, -20.0);
-    descuento_aumento<float>(prt_precio, 25.0);
+    descuento_aumento<float>(prt_precio, 25.0); 
 
     imprimir<std::string, int, float>(producto, ptr_cantidad, prt_precio);
-
+    imprimir(producto, cantidad, precio);
     return 0;
 }
