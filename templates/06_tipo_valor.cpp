@@ -32,4 +32,3 @@ int main() {
     std::cout << "Final: " << temp << "\n";
     return 0;
 }
-ok
