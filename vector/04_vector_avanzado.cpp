@@ -1,24 +1,32 @@
 #include <iostream>
 #include <vector>
-#include <numeric> // std::accumulate
-#include <utility> // std::move
+#include <numeric>
+#include <utility>
+
+void print_vector(const std::vector<int>& v, const std::string& name) {
+    std::cout << name << " [size=" << v.size() << "]: ";
+    for (auto t : v) std::cout << t << " ";
+    std::cout << "\n";
+}
 
 int main() {
     std::vector<int> v = {1, 2, 3, 4};
+    print_vector(v, "v inicial");
 
-    int sum = std::accumulate(v.begin(), v.end(), 0);
-    std::cout << "Suma: " << sum << std::endl;
+    int sum = std::accumulate(v.begin(), v.end(), 0); // 0 es el valor inicial de la suma
+    std::cout << "Suma: " << sum << "\n";
 
-    v.emplace_back(10);                  // inserta al final construyendo el objeto
-    std::cout << "Último: " << v.back() << std::endl;
+    v.emplace_back(10);
+    print_vector(v, "v tras emplace_back");
 
-    v.shrink_to_fit();                   // ajusta la capacidad al tamaño real
+    v.shrink_to_fit();
+    std::vector<int> copia = v;          
+    std::vector<int> movido = std::move(v); 
 
-    std::vector<int> copia = v;          // copia completa
-    std::vector<int> movido = std::move(v); // mueve contenido
+    print_vector(copia, "copia");
+    print_vector(movido, "movido");
+    print_vector(v, "v (tras move)");
 
-    std::cout << "copia size = " << copia.size() << " movido size = " << movido.size() << std::endl;
-    std::cout << "v vacío? " << std::boolalpha << v.empty() << std::endl;
-
+    std::cout << "v vacio? " << std::boolalpha << v.empty() << "\n";
     return 0;
 }
