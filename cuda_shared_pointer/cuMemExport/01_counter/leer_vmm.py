@@ -61,31 +61,27 @@ class VMM_Consumer:
         if result != 0:
             raise RuntimeError(f"cuCtxCreate failed: {result}")
         
-        print("✅ CUDA inicializado")
+        print("CUDA inicializado")
     
     def receive_fd_from_socket(self):
-        """Recibir file descriptor vía Unix socket con SCM_RIGHTS"""
+        """Recibir file descriptor via Unix socket con SCM_RIGHTS"""
         
-        # Conectar al socket Unix
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.connect("/tmp/vmm_counter.sock")
         
-        print("✅ Conectado al socket Unix")
+        print("Conectado al socket Unix")
         
-        # Recibir el tamaño primero
         size_data = sock.recv(8)
         size = struct.unpack('Q', size_data)[0]
         
-        print(f"📥 Tamaño recibido: {size} bytes")
+        print(f"Tamano recibido: {size} bytes")
         
-        # Recibir el FD usando recvmsg (compatible con Python 3.8)
-        fds = array.array("i")  # Array para almacenar FDs
+        fds = array.array("i")
         msg, ancdata, flags, addr = sock.recvmsg(1, socket.CMSG_SPACE(struct.calcsize("i")))
         
         if len(ancdata) == 0:
-            raise RuntimeError("No se recibió file descriptor")
+            raise RuntimeError("No se recibio file descriptor")
         
-        # Extraer el FD de los datos ancilares
         for cmsg_level, cmsg_type, cmsg_data in ancdata:
             if cmsg_level == socket.SOL_SOCKET and cmsg_type == socket.SCM_RIGHTS:
                 fds.frombytes(cmsg_data[:len(cmsg_data) - (len(cmsg_data) % fds.itemsize)])
@@ -95,7 +91,7 @@ class VMM_Consumer:
         
         fd = fds[0]
         
-        print(f"📥 File descriptor recibido: {fd}")
+        print(f"File descriptor recibido: {fd}")
         
         sock.close()
         
@@ -104,14 +100,12 @@ class VMM_Consumer:
     def import_shared_memory(self):
         """Importar memoria desde el productor"""
         
-        # Recibir el FD correctamente vía socket
         fd, size = self.receive_fd_from_socket()
         
-        print(f"📥 Importando handle CUDA:")
+        print(f"Importando handle CUDA:")
         print(f"   FD: {fd}")
-        print(f"   Tamaño: {size} bytes")
+        print(f"   Tamano: {size} bytes")
         
-        # Importar handle usando el FD recibido
         imported_handle = CUmemGenericAllocationHandle()
         result = cuda.cuMemImportFromShareableHandle(
             ctypes.byref(imported_handle),
@@ -124,9 +118,8 @@ class VMM_Consumer:
         if result != 0:
             raise RuntimeError(f"cuMemImportFromShareableHandle failed: {result}")
         
-        print("✅ Handle importado correctamente")
+        print("Handle importado correctamente")
         
-        # Reservar espacio de direcciones
         d_ptr = CUdeviceptr()
         result = cuda.cuMemAddressReserve(
             ctypes.byref(d_ptr),
@@ -139,7 +132,6 @@ class VMM_Consumer:
         if result != 0:
             raise RuntimeError(f"cuMemAddressReserve failed: {result}")
         
-        # Mapear memoria
         result = cuda.cuMemMap(
             d_ptr,
             ctypes.c_size_t(size),
@@ -151,29 +143,11 @@ class VMM_Consumer:
         if result != 0:
             raise RuntimeError(f"cuMemMap failed: {result}")
         
-        # Establecer permisos de acceso para este proceso
-        # Cada proceso debe establecer permisos para su propio contexto CUDA
-        access_desc = CUmemAccessDesc()
-        access_desc.location.type = CU_MEM_LOCATION_TYPE_DEVICE
-        access_desc.location.id = 0
-        access_desc.flags = CU_MEM_ACCESS_FLAGS_PROT_READWRITE
-        
-        result = cuda.cuMemSetAccess(
-            d_ptr,
-            ctypes.c_size_t(size),
-            ctypes.byref(access_desc),
-            ctypes.c_size_t(1)
-        )
-        
-        if result != 0:
-            raise RuntimeError(f"cuMemSetAccess failed: {result}")
-        
-        print(f"✅ Memoria mapeada en: {hex(d_ptr.value)}")
+        print(f"Memoria mapeada en: {hex(d_ptr.value)}")
         
         self.d_ptr = d_ptr
         self.size = size
         
-        # Abrir shared memory para el flag running
         self.shm = shared_memory.SharedMemory(name="vmm_counter")
         self.shared_struct = Shared.from_buffer(self.shm.buf)
         
@@ -182,10 +156,8 @@ class VMM_Consumer:
     def read_counter(self):
         """Leer valor del contador desde GPU"""
         
-        # Crear buffer host
         counter_value = ctypes.c_int64()
         
-        # Copiar de GPU a CPU
         result = cuda.cuMemcpyDtoH(
             ctypes.byref(counter_value),
             self.d_ptr,
@@ -204,7 +176,7 @@ class VMM_Consumer:
     def stop(self):
         """Detener el productor"""
         self.shared_struct.running = 0
-        print("🛑 Señal de parada enviada")
+        print("Senal de parada enviada")
     
     def cleanup(self):
         """Limpiar recursos"""
@@ -215,16 +187,15 @@ class VMM_Consumer:
             cuda.cuCtxDestroy_v2(self.context)
 
 def main():
-    print("🚀 Consumer VMM iniciado\n")
+    print("Consumer VMM iniciado\n")
     
     consumer = VMM_Consumer()
     
     try:
-        # Importar memoria compartida
         device_ptr, size = consumer.import_shared_memory()
         
-        print(f"\n📊 Leyendo contador desde GPU...")
-        print(f"   Presiona Ctrl+C para detener\n")
+        print(f"\nLeyendo contador desde GPU...")
+        print(f"Presiona Ctrl+C para detener\n")
         
         while consumer.is_running():
             try:
@@ -232,16 +203,16 @@ def main():
                 print(f"Contador: {counter_value}")
                 time.sleep(1)
             except Exception as e:
-                print(f"⚠️  Error leyendo: {e}")
+                print(f"Error leyendo: {e}")
                 break
         
-        print("\n✅ Lectura finalizada")
+        print("\nLectura finalizada")
         
     except KeyboardInterrupt:
-        print("\n\n⚠️  Interrupción detectada")
+        print("\n\nInterrupcion detectada")
         consumer.stop()
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\nError: {e}")
         import traceback
         traceback.print_exc()
     finally:
