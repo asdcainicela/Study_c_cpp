@@ -8,10 +8,26 @@
 - **Por que funciona:** En Jetson UMA, CPU y GPU comparten RAM fisica
 - **Uso:** Datos genericos (contadores, tensores, buffers)
 
-### 2. DMA-BUF + EGL (video pipelines)
-- **Uso:** Solo para frames de video (V4L2, GStreamer, camaras)
+### 2. DMA-BUF + EGL (NO necesario para la mayoria de casos)
+- **Que es:** Zero-copy desde driver de camara hasta CUDA, sin pasar por memoria de usuario
 - **APIs:** `NvBufSurface`, `EGLImage`, `cudaGraphicsEGLRegisterImage`
-- **No aplica** para datos genericos
+
+**Cuando SI necesitas DMA-BUF:**
+- Camaras 120+ fps
+- Multiples camaras simultaneas
+- Latencia ultra-baja (drones, robotica critica)
+- Cuando cada microsegundo importa
+
+**Cuando NO necesitas DMA-BUF (tu caso probablemente):**
+- 30-90 fps con camara USB o CSI
+- El cuello de botella es la inferencia, no la captura
+- Ya tienes el frame en memoria de C++
+
+**Calculo para 88 fps:**
+- 88 fps = ~11.4ms por frame
+- Copia de frame 1080p a `/dev/shm/` = ~0.5-1ms
+- DMA-BUF ahorraria ~0.5ms, pero anade complejidad significativa
+- **Conclusion:** Usa `cudaHostRegister`, no vale la pena DMA-BUF
 
 ---
 
