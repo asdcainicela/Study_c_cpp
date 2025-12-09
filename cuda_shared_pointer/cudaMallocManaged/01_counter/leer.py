@@ -10,9 +10,22 @@ shm = SharedMemory(name="cnt")
 s = Shared.from_buffer(shm.buf)
 
 device = torch.device('cuda')
-storage = torch.cuda.LongStorage._new_shared_cuda(1, s.ptr, device)
+
+# Crear storage usando UntypedStorage (API nueva)
+storage = torch.UntypedStorage._new_shared_cuda(
+    s.ptr,           # device_ptr
+    1 * 8,           # size en bytes (1 int64 = 8 bytes)
+    device.index     # device index (0)
+)
+
+# Crear tensor desde storage
 cnt = torch.tensor([], dtype=torch.int64, device=device)
-cnt.set_(storage, 0, (1,))
+cnt.set_(
+    storage.untyped(),
+    0,
+    (1,),
+    (1,)
+)
 
 print("Leyendo contador")
 
