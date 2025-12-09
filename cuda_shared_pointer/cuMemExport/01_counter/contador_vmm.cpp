@@ -184,7 +184,8 @@ public:
         cuMemUnmap(d_ptr, aligned_size);
         cuMemRelease(mem_handle);
         cuCtxDestroy(context);
-        ::close(fd_export);
+        // NO cerrar fd_export - otros procesos lo necesitan
+        // ::close(fd_export);
     }
 };
 

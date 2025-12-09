@@ -2,7 +2,7 @@
 # leer_vmm.py
 import ctypes
 import time
-import numpy as np
+import os
 from multiprocessing import shared_memory
 
 # Cargar CUDA Driver API
@@ -75,18 +75,22 @@ class VMM_Consumer:
         print(f"   FD: {fd}")
         print(f"   Tamaño: {size} bytes")
         
-        # 2. Importar handle
+        # 2. Duplicar el FD para que este proceso tenga su propia referencia
+        fd_dup = os.dup(fd)
+        print(f"   FD duplicado: {fd_dup}")
+        
+        # 3. Importar handle usando el FD duplicado
         imported_handle = CUmemGenericAllocationHandle()
         result = cuda.cuMemImportFromShareableHandle(
             ctypes.byref(imported_handle),
-            ctypes.c_void_p(fd),
+            ctypes.c_void_p(fd_dup),
             CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR
         )
         
         if result != 0:
             raise RuntimeError(f"cuMemImportFromShareableHandle failed: {result}")
         
-        # 3. Reservar espacio de direcciones
+        # 4. Reservar espacio de direcciones
         d_ptr = CUdeviceptr()
         result = cuda.cuMemAddressReserve(
             ctypes.byref(d_ptr),
@@ -99,7 +103,7 @@ class VMM_Consumer:
         if result != 0:
             raise RuntimeError(f"cuMemAddressReserve failed: {result}")
         
-        # 4. Mapear memoria
+        # 5. Mapear memoria
         result = cuda.cuMemMap(
             d_ptr,
             ctypes.c_size_t(size),
@@ -111,7 +115,7 @@ class VMM_Consumer:
         if result != 0:
             raise RuntimeError(f"cuMemMap failed: {result}")
         
-        # 5. Establecer permisos de acceso
+        # 6. Establecer permisos de acceso
         access_desc = CUmemAccessDesc()
         access_desc.location.type = CU_MEM_LOCATION_TYPE_DEVICE
         access_desc.location.id = 0
@@ -133,6 +137,7 @@ class VMM_Consumer:
         self.size = size
         self.shm = shm
         self.shared_struct = shared_struct
+        self.fd_dup = fd_dup
         
         return d_ptr.value, size
     
@@ -165,6 +170,9 @@ class VMM_Consumer:
     
     def cleanup(self):
         """Limpiar recursos"""
+        if hasattr(self, 'fd_dup'):
+            os.close(self.fd_dup)
+        
         if hasattr(self, 'shm'):
             self.shm.close()
         
