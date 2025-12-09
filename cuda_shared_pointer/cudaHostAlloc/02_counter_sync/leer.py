@@ -68,7 +68,9 @@ def main():
                 
                 last_counter = counter
             
-            time.sleep(0.001)  # 1ms polling
+            time.sleep(0.001)  # 1ms polling 
+            # time.sleep(0.0001)  # 100 µs
+            # Sin sleep, solo while True Usar busy-wait (máximo rendimiento, máximo CPU)
             
     except KeyboardInterrupt:
         print("\n-------------------------------------------")
