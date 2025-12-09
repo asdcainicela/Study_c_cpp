@@ -11,17 +11,24 @@ s = Shared.from_buffer(shm.buf)
 
 device = torch.device('cuda')
 
-# Crear storage usando UntypedStorage (API nueva)
+# Crear storage usando UntypedStorage con todos los parámetros requeridos
+# Firma: _new_shared_cuda(device_ptr, size, allocator_ptr, resizable, 
+#                         ref_counting, allocator_type, device_type, device_index)
 storage = torch.UntypedStorage._new_shared_cuda(
-    s.ptr,           # device_ptr
-    1 * 8,           # size en bytes (1 int64 = 8 bytes)
-    device.index     # device index (0)
+    s.ptr,           # device_ptr: puntero al device memory
+    1 * 8,           # size: tamaño en bytes (1 int64 = 8 bytes)
+    0,               # allocator_ptr: NULL (no custom allocator)
+    False,           # resizable: no redimensionable
+    False,           # ref_counting: sin reference counting
+    0,               # allocator_type: default
+    torch.device('cuda').type,  # device_type: 'cuda'
+    device.index if device.index is not None else 0  # device_index
 )
 
 # Crear tensor desde storage
 cnt = torch.tensor([], dtype=torch.int64, device=device)
 cnt.set_(
-    storage.untyped(),
+    storage,
     0,
     (1,),
     (1,)
