@@ -2,6 +2,7 @@
 #define SHARED_H
 
 #include <cstdint>
+#include <cstddef>
 
 struct Shared {
     int fd;           // File descriptor del handle CUDA VMM
