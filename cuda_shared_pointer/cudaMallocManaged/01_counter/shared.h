@@ -7,6 +7,7 @@
 struct Shared {
     uint64_t ptr;
     int running;
+    int64_t value;  // Valor del contador copiado aquí para acceso desde Python
 };
 
 #endif

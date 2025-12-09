@@ -25,6 +25,7 @@ int main() {
     
     while (s->running) {
         (*cnt)++;
+        s->value = *cnt;  // Copiar valor a shared memory para Python
         std::cout << *cnt << std::endl;
         sleep(1);
     }
