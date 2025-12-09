@@ -2,7 +2,9 @@
 # leer_vmm.py
 import ctypes
 import time
-import os
+import socket
+import struct
+import array
 from multiprocessing import shared_memory
 
 # Cargar CUDA Driver API
@@ -61,36 +63,62 @@ class VMM_Consumer:
         
         print("✅ CUDA inicializado")
     
+    def receive_fd_from_socket(self):
+        """Recibir file descriptor vía Unix socket con SCM_RIGHTS"""
+        
+        # Conectar al socket Unix
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.connect("/tmp/vmm_counter.sock")
+        
+        print("✅ Conectado al socket Unix")
+        
+        # Recibir el tamaño primero
+        size_data = sock.recv(8)
+        size = struct.unpack('Q', size_data)[0]
+        
+        print(f"📥 Tamaño recibido: {size} bytes")
+        
+        # Recibir el FD usando SCM_RIGHTS
+        fds = array.array("i")  # Array para almacenar FDs
+        msg, ancdata, flags, addr = socket.recv_fds(sock, 1, 1)
+        
+        if len(ancdata) == 0:
+            raise RuntimeError("No se recibió file descriptor")
+        
+        fd = ancdata[0]
+        
+        print(f"📥 File descriptor recibido: {fd}")
+        
+        sock.close()
+        
+        return fd, size
+    
     def import_shared_memory(self):
         """Importar memoria desde el productor"""
         
-        # 1. Leer file descriptor desde shared memory
-        shm = shared_memory.SharedMemory(name="vmm_counter")
-        shared_struct = Shared.from_buffer(shm.buf)
+        # Recibir el FD correctamente vía socket
+        fd, size = self.receive_fd_from_socket()
         
-        fd = shared_struct.fd
-        size = shared_struct.size
-        
-        print(f"📥 Importando handle:")
+        print(f"📥 Importando handle CUDA:")
         print(f"   FD: {fd}")
         print(f"   Tamaño: {size} bytes")
         
-        # 2. Duplicar el FD para que este proceso tenga su propia referencia
-        fd_dup = os.dup(fd)
-        print(f"   FD duplicado: {fd_dup}")
-        
-        # 3. Importar handle usando el FD duplicado
+        # Importar handle usando el FD recibido
         imported_handle = CUmemGenericAllocationHandle()
         result = cuda.cuMemImportFromShareableHandle(
             ctypes.byref(imported_handle),
-            ctypes.c_void_p(fd_dup),
+            ctypes.c_void_p(fd),
             CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR
         )
+        
+        print(f"   Resultado import: {result}")
         
         if result != 0:
             raise RuntimeError(f"cuMemImportFromShareableHandle failed: {result}")
         
-        # 4. Reservar espacio de direcciones
+        print("✅ Handle importado correctamente")
+        
+        # Reservar espacio de direcciones
         d_ptr = CUdeviceptr()
         result = cuda.cuMemAddressReserve(
             ctypes.byref(d_ptr),
@@ -103,7 +131,7 @@ class VMM_Consumer:
         if result != 0:
             raise RuntimeError(f"cuMemAddressReserve failed: {result}")
         
-        # 5. Mapear memoria
+        # Mapear memoria
         result = cuda.cuMemMap(
             d_ptr,
             ctypes.c_size_t(size),
@@ -115,7 +143,7 @@ class VMM_Consumer:
         if result != 0:
             raise RuntimeError(f"cuMemMap failed: {result}")
         
-        # 6. Establecer permisos de acceso
+        # Establecer permisos de acceso
         access_desc = CUmemAccessDesc()
         access_desc.location.type = CU_MEM_LOCATION_TYPE_DEVICE
         access_desc.location.id = 0
@@ -135,9 +163,10 @@ class VMM_Consumer:
         
         self.d_ptr = d_ptr
         self.size = size
-        self.shm = shm
-        self.shared_struct = shared_struct
-        self.fd_dup = fd_dup
+        
+        # Abrir shared memory para el flag running
+        self.shm = shared_memory.SharedMemory(name="vmm_counter")
+        self.shared_struct = Shared.from_buffer(self.shm.buf)
         
         return d_ptr.value, size
     
@@ -170,9 +199,6 @@ class VMM_Consumer:
     
     def cleanup(self):
         """Limpiar recursos"""
-        if hasattr(self, 'fd_dup'):
-            os.close(self.fd_dup)
-        
         if hasattr(self, 'shm'):
             self.shm.close()
         

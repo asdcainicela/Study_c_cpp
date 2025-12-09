@@ -3,6 +3,8 @@
 #include <cuda.h>
 #include <iostream>
 #include <sys/mman.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstring>
@@ -16,9 +18,11 @@ private:
     size_t aligned_size;
     int fd_export;
     CUcontext context;
+    int socket_fd;
+    int client_fd;
 
 public:
-    VMM_Counter(size_t alloc_size) : size(alloc_size) {
+    VMM_Counter(size_t alloc_size) : size(alloc_size), socket_fd(-1), client_fd(-1) {
         // 1. Inicializar CUDA Driver API
         CUresult res = cuInit(0);
         if (res != CUDA_SUCCESS) {
@@ -108,7 +112,72 @@ public:
     }
     
     void share_handle() {
-        // Compartir file descriptor vía POSIX shared memory
+        // Crear socket Unix para transferir el FD
+        socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+        if (socket_fd == -1) {
+            throw std::runtime_error("socket failed");
+        }
+        
+        struct sockaddr_un addr = {};
+        addr.sun_family = AF_UNIX;
+        strncpy(addr.sun_path, "/tmp/vmm_counter.sock", sizeof(addr.sun_path) - 1);
+        
+        // Eliminar socket anterior si existe
+        unlink(addr.sun_path);
+        
+        if (bind(socket_fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+            throw std::runtime_error("bind failed");
+        }
+        
+        if (listen(socket_fd, 1) == -1) {
+            throw std::runtime_error("listen failed");
+        }
+        
+        std::cout << "✅ Socket Unix creado: /tmp/vmm_counter.sock" << std::endl;
+        std::cout << "   Esperando conexión del consumer..." << std::endl;
+        
+        // Aceptar conexión
+        client_fd = accept(socket_fd, nullptr, nullptr);
+        if (client_fd == -1) {
+            throw std::runtime_error("accept failed");
+        }
+        
+        std::cout << "✅ Consumer conectado" << std::endl;
+        
+        // Enviar el tamaño primero
+        if (send(client_fd, &aligned_size, sizeof(aligned_size), 0) == -1) {
+            throw std::runtime_error("send size failed");
+        }
+        
+        // Enviar el FD usando SCM_RIGHTS
+        struct msghdr msg = {};
+        struct iovec iov = {};
+        char buf[1] = {0};
+        
+        iov.iov_base = buf;
+        iov.iov_len = 1;
+        
+        msg.msg_iov = &iov;
+        msg.msg_iovlen = 1;
+        
+        char control[CMSG_SPACE(sizeof(int))];
+        msg.msg_control = control;
+        msg.msg_controllen = sizeof(control);
+        
+        struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
+        cmsg->cmsg_level = SOL_SOCKET;
+        cmsg->cmsg_type = SCM_RIGHTS;
+        cmsg->cmsg_len = CMSG_LEN(sizeof(int));
+        
+        memcpy(CMSG_DATA(cmsg), &fd_export, sizeof(int));
+        
+        if (sendmsg(client_fd, &msg, 0) == -1) {
+            throw std::runtime_error("sendmsg failed");
+        }
+        
+        std::cout << "✅ File descriptor enviado al consumer" << std::endl;
+        
+        // También compartir info vía shared memory para el flag running
         int shm_fd = shm_open("/vmm_counter", O_CREAT | O_RDWR, 0666);
         if (shm_fd == -1) {
             throw std::runtime_error("shm_open failed");
@@ -129,7 +198,6 @@ public:
             throw std::runtime_error("mmap failed");
         }
         
-        // Escribir información del handle
         shm_ptr->fd = fd_export;
         shm_ptr->size = aligned_size;
         shm_ptr->running = 1;
@@ -137,8 +205,6 @@ public:
         
         munmap(shm_ptr, sizeof(Shared));
         close(shm_fd);
-        
-        std::cout << "✅ Handle compartido vía /vmm_counter" << std::endl;
     }
     
     CUdeviceptr get_device_ptr() const { 
@@ -181,6 +247,11 @@ public:
     }
     
     ~VMM_Counter() {
+        if (client_fd != -1) close(client_fd);
+        if (socket_fd != -1) {
+            close(socket_fd);
+            unlink("/tmp/vmm_counter.sock");
+        }
         cuMemUnmap(d_ptr, aligned_size);
         cuMemRelease(mem_handle);
         cuCtxDestroy(context);
