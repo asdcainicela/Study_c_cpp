@@ -78,14 +78,22 @@ class VMM_Consumer:
         
         print(f"📥 Tamaño recibido: {size} bytes")
         
-        # Recibir el FD usando SCM_RIGHTS
+        # Recibir el FD usando recvmsg (compatible con Python 3.8)
         fds = array.array("i")  # Array para almacenar FDs
-        msg, ancdata, flags, addr = socket.recv_fds(sock, 1, 1)
+        msg, ancdata, flags, addr = sock.recvmsg(1, socket.CMSG_SPACE(struct.calcsize("i")))
         
         if len(ancdata) == 0:
             raise RuntimeError("No se recibió file descriptor")
         
-        fd = ancdata[0]
+        # Extraer el FD de los datos ancilares
+        for cmsg_level, cmsg_type, cmsg_data in ancdata:
+            if cmsg_level == socket.SOL_SOCKET and cmsg_type == socket.SCM_RIGHTS:
+                fds.frombytes(cmsg_data[:len(cmsg_data) - (len(cmsg_data) % fds.itemsize)])
+        
+        if len(fds) == 0:
+            raise RuntimeError("No se pudo extraer file descriptor")
+        
+        fd = fds[0]
         
         print(f"📥 File descriptor recibido: {fd}")
         
