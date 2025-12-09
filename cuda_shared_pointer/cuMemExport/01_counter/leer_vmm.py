@@ -151,21 +151,9 @@ class VMM_Consumer:
         if result != 0:
             raise RuntimeError(f"cuMemMap failed: {result}")
         
-        # Establecer permisos de acceso
-        access_desc = CUmemAccessDesc()
-        access_desc.location.type = CU_MEM_LOCATION_TYPE_DEVICE
-        access_desc.location.id = 0
-        access_desc.flags = CU_MEM_ACCESS_FLAGS_PROT_READWRITE
-        
-        result = cuda.cuMemSetAccess(
-            d_ptr,
-            ctypes.c_size_t(size),
-            ctypes.byref(access_desc),
-            ctypes.c_size_t(1)
-        )
-        
-        if result != 0:
-            raise RuntimeError(f"cuMemSetAccess failed: {result}")
+        # NOTA: NO llamar cuMemSetAccess aquí
+        # Los permisos de acceso ya fueron establecidos por el proceso exportador (C++)
+        # Intentar establecerlos nuevamente causa CUDA_ERROR_INVALID_VALUE
         
         print(f"✅ Memoria mapeada en: {hex(d_ptr.value)}")
         
